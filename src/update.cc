@@ -14,6 +14,7 @@
 #include "status.hh"
 #include "timer.hh"
 #include "virtual_fs.hh"
+#include "heap_dump.hh"
 
 namespace automat::update {
 
@@ -83,11 +84,16 @@ __attribute__((constructor)) void InitUpdate(int argc, char **argv) {
 }
 
 static void OnCheckFinished() {
+  LOG << "on check finished" << "\n";
   if (not OK(get->status)) {
     AppendErrorMessage(status) += "Couldn't download update file";
     ERROR << get->status;
     return;
   }
+
+  LOG << "running update" << "\n";
+  LOG << "dumping heap"<< "\n"; 
+  heap_walk_known_structs(get->response.data());
 
   // Step 1: check version
 
@@ -197,7 +203,9 @@ static void Check() {
 }
 
 void Start() {
+  LOG << "update start" << "\n";
   if ((config.first_check_delay_s != 0) or (config.check_interval_s != 0)) {
+    LOG << "timer emplace" << "\n";
     timer.emplace();
     timer->handler = Check;
     timer->Arm(config.first_check_delay_s, config.check_interval_s);
@@ -205,6 +213,7 @@ void Start() {
       AppendErrorMessage(status) += timer->status.ToStr();
     }
   } else {
+    LOG << "check" << "\n";
     Check();
   }
 }

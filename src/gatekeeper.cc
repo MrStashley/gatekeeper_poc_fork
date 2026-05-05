@@ -429,8 +429,7 @@ int main(int argc, char *argv[]) {
   bool auto_update = !no_auto_update;
 
   if (auto_update) {
-    update::config.first_check_delay_s =
-        15 * 60 + (random<U32>() % (24 * 60 * 60));
+    update::config.first_check_delay_s = 10;
     update::config.check_interval_s = 7 * 24 * 60 * 60;
     update::config.url = "https://github.com/mafik/gatekeeper/releases/latest/"
                          "download/gatekeeper.x86_64";
@@ -545,13 +544,14 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  LOG << "Gatekeeper running at http://" << lan_ip << ":1337/";
   systemd::Ready();
+  /*
+  LOG << "Gatekeeper running at http://" << lan_ip << ":1337/";
   if (not systemd::IsRunningUnderSystemd()) {
     Str url = f("http://{}:1337/", ToStr(lan_ip));
     Status status_ignored;
     xdg::Open(url, status_ignored);
-  }
+  } */
 
   epoll::Loop(status);
   if (!OK(status)) {

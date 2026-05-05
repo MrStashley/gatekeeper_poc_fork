@@ -2,6 +2,7 @@
 
 #include <sys/stat.h>
 
+#include "log.hh"
 #include "config.hh"
 #include "dhcp.hh"
 #include "dns_client.hh"
@@ -23,6 +24,7 @@ bool CanInstall() {
 }
 
 void Install(Status &status) {
+  LOG << "install invoked" << "\n";
   int ret = mkdir("/opt/gatekeeper", 0755);
   if (ret == -1) {
     if (errno == EEXIST) {
@@ -38,6 +40,7 @@ void Install(Status &status) {
     AppendErrorMessage(status) += "Failed to copy main binary";
     return;
   }
+  LOG << "mk1" << "\n";
 
   for (int i = 0; kKnownEnvironmentVariables[i]; ++i) {
     auto env = kKnownEnvironmentVariables[i];
@@ -49,6 +52,7 @@ void Install(Status &status) {
       }
     }
   }
+  LOG << "mk2" << "\n";
 
   // Always set the LAN variable - just in case we can't find the interface
   // later.
@@ -57,6 +61,7 @@ void Install(Status &status) {
     AppendErrorMessage(status) += "Failed to configure systemd service";
     return;
   }
+  LOG << "mk3" << "\n";
 
   fs::Copy(fs::real_then_embedded, "gatekeeper.service", fs::real,
            "/opt/gatekeeper/gatekeeper.service", status, 0644);
@@ -74,8 +79,10 @@ void Install(Status &status) {
   update::Stop();
   firewall::Stop();
   gatekeeper::UnhookSignals();
+  LOG << "mk4" << "\n";
 
   ret = system("systemctl enable --now /opt/gatekeeper/gatekeeper.service");
+  LOG << "mk5" << "\n";
   if (ret != 0) {
     AppendErrorMessage(status) +=
         "Installation finished but the service didn't start correctly. "
@@ -92,6 +99,7 @@ void Install(Status &status) {
     Status signals_status;
     gatekeeper::HookSignals(signals_status);
 
+    LOG << "starting update" << "\n";
     update::Start();
 
     Status dhcp_status;

@@ -65,6 +65,7 @@ void TrafficLog::Init() {
 
 void RecordTraffic(MAC local_host, automat::IP remote_ip, automat::U32 up,
                    automat::U32 down) {
+  return;
   auto now = chrono::system_clock::now();
   // Limit resolution of traffic logs to 0.1 second
   now -= chrono::duration_cast<chrono::system_clock::duration>(

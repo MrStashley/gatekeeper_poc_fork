@@ -124,12 +124,16 @@ static int ConsumeWebSocketFrame(Connection& c) {
   if (payload_len == 126) {
     if (c.request_buffer.size() < 4)  // 2 bytes header + 2 bytes payload len
       return 0;
-    payload_len = *(U16*)(c.request_buffer.data() + offset);
+    U16 raw;
+    memcpy(&raw, c.request_buffer.data() + offset, 2);
+    payload_len = ntohs(raw);
     offset += 2;
   } else if (payload_len == 127) {
     if (c.request_buffer.size() < 10)  // 2 bytes header + 8 bytes of payload len
       return 0;
-    payload_len = *(U64*)(c.request_buffer.data() + offset);
+    U64 raw;
+    memcpy(&raw, c.request_buffer.data() + offset, 8);
+    payload_len = be64toh(raw);
     offset += 8;
     if (payload_len & 0x8000000000000000ull) {
       // Wikipedia says that "MSB must be 0" for 8-byte payload lengths.
@@ -179,7 +183,7 @@ static int ConsumeHttpRequest(Connection& c) {
   Response response(c.response_buffer);
   Request request(c.request_buffer);
 
-  bool connection_header = request["Connection"] == "Upgrade";
+  bool connection_header = request["Connection"].find("Upgrade") != std::string_view::npos;
   bool upgrade_header = request["Upgrade"] == "websocket";
   std::string_view websocket_key = request["Sec-WebSocket-Key"];
   if (connection_header && upgrade_header && !websocket_key.empty()) {
@@ -234,6 +238,7 @@ static void TryWriting(Connection& c) {
     return;
   }
   ssize_t count = send(c.fd, c.response_buffer.c_str(), c.response_buffer.size(), MSG_NOSIGNAL);
+  
 #ifdef DEBUG_HTTP
   LOG << "write " << c.fd << ": " << (int)count << "bytes";
 #endif

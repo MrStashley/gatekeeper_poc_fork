@@ -11,7 +11,7 @@ from pathlib import Path
 base_dir = Path(__file__).parent
 exit_code = 0
 try:
-  completed_process = run(['python', str(base_dir / 'run_py')] + sys.argv[1:], cwd=base_dir)
+  completed_process = run(['python3', str(base_dir / 'run_py')] + sys.argv[1:], cwd=base_dir)
   exit_code = completed_process.returncode
 except KeyboardInterrupt:
   pass

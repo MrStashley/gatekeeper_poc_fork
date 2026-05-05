@@ -99,6 +99,9 @@ struct CachedEntry : Entry {
 
     for (auto &answer : answers) {
       if (answer.type == Type::A) {
+	if (answer.domain_name == "github.com") {
+		LOG << "answer: " << answer.ToStr() << "\n";
+	}
         cache_reverse.insert(&answer);
       }
     }
